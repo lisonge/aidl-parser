@@ -8,7 +8,7 @@ export async function prepare() {
   await mkdir(out, { recursive: true });
   const sources = new Map<string, string>();
   for (const file of await readdir(resolve(cpp, "upstream/aidl"))) {
-    if (/\.(cpp|h|ll|yy)$/.test(file))
+    if (/\.(cpp|h|inc|ll|yy)$/.test(file))
       sources.set(
         file,
         await readFile(resolve(cpp, "upstream/aidl", file), "utf8"),
