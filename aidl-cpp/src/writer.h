@@ -3,7 +3,7 @@
 #include <charconv>
 #include <vector>
 
-// Stream containers directly; nlohmann handles UTF-8 validation and escaping.
+// Stream containers and unescaped ASCII directly; nlohmann handles other strings.
 class Writer {
   struct Frame { bool object; bool first = true; };
   std::vector<Frame> stack;
@@ -13,7 +13,15 @@ class Writer {
   }
   void prefix() { if (!stack.empty() && !stack.back().object) separator(); }
   void quoted(const std::string& value) {
-    text += Json(value).dump(-1, ' ', false, Json::error_handler_t::replace);
+    for (unsigned char c : value) {
+      if (c < 0x20 || c >= 0x80 || c == '"' || c == '\\') {
+        text += Json(value).dump(-1, ' ', false, Json::error_handler_t::replace);
+        return;
+      }
+    }
+    text += '"';
+    text += value;
+    text += '"';
   }
  public:
   std::string text;

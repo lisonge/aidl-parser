@@ -6,6 +6,9 @@ import type { WasmModule } from "../aidl-parser/src/runtime.ts";
 import { decode } from "../aidl-parser/src/decode.ts";
 import type { WireResult } from "../aidl-parser/src/decode.ts";
 import { parseAidl } from "../aidl-parser/dist/index.js";
+import assert from "node:assert/strict";
+import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 
 type Factory = (
   options?: object,
@@ -15,6 +18,11 @@ type Factory = (
 const root = new URL("../", import.meta.url);
 const profile = process.argv.includes("--profile");
 const baseline = process.argv.includes("--baseline");
+const compareIndex = process.argv.indexOf("--compare");
+const compare =
+  compareIndex < 0
+    ? null
+    : pathToFileURL(resolve(process.argv[compareIndex + 1]!) + "/");
 const iterations = Number(process.env.BENCH_ITERATIONS ?? 30);
 const warmup = Number(process.env.BENCH_WARMUP ?? 25);
 const variants: {
@@ -23,6 +31,19 @@ const variants: {
   parse: (source: string) => unknown;
   convert: (value: unknown, source: string) => unknown;
 }[] = [];
+if (compare) {
+  const old = await import(new URL("dist/index.js", compare).href);
+  const oldDecoder = await import(new URL("src/decode.ts", compare).href);
+  const factory: Factory = (
+    await import(new URL("dist/wasm/aidl.mjs", compare).href)
+  ).default;
+  variants.push({
+    name: "before",
+    module: await factory(),
+    parse: old.parseAidl,
+    convert: oldDecoder.decode,
+  });
+}
 if (baseline) {
   const old = await import(
     new URL("build/benchmarks/baseline/dist/index.js", root).href
@@ -69,6 +90,10 @@ const cases = {
   ),
   methods1000: `interface I {\n${Array.from({ length: 1000 }, (_, i) => `  int method${i}(in int value, out String text);`).join("\n")}\n}`,
   methods5000: `interface I {\n${Array.from({ length: 5000 }, (_, i) => `  int method${i}(in int value, out String text);`).join("\n")}\n}`,
+  expressions1000: `interface I {\n${Array.from({ length: 1000 }, (_, i) => `  const int VALUE${i} = ((1 /* note */ + 2)) * 3;`).join("\n")}\n}`,
+  unicode1000: `// 中文 😀\r\ninterface I {\r\n${Array.from({ length: 1000 }, (_, i) => `  /* 中文 😀 */ int method${i}(in int value);`).join("\r\n")}\r\n}`,
+  chains20x500: `interface I {\n${Array.from({ length: 20 }, (_, i) => `const int VALUE${i} = ${Array.from({ length: 500 }, (_, j) => String(j + 1)).join(" + ")};`).join("\n")}\n}`,
+  arrays20x500: `parcelable P {\n${Array.from({ length: 20 }, (_, i) => `int[] values${i} = {${Array.from({ length: 500 }, (_, j) => String(j)).join(", ")}};`).join("\n")}\n}`,
 };
 const percentile = (values: number[], fraction: number) =>
   [...values].sort((a, b) => a - b)[
@@ -97,6 +122,12 @@ const report: Record<string, unknown> = {
 };
 for (const [name, source] of Object.entries(cases)) {
   if (process.env.BENCH_CASE && name !== process.env.BENCH_CASE) continue;
+  if (compare)
+    assert.deepEqual(
+      variants[0]!.parse(source),
+      parseAidl(source),
+      `${name}: public AST changed`,
+    );
   const results: Record<string, unknown> = {};
   for (let i = 0; i < warmup; i++) {
     for (const variant of variants) variant.parse(source);
@@ -172,7 +203,8 @@ report.gc = { count: gcCount, durationMs: gcMs };
 report.memory = process.memoryUsage();
 await mkdir(new URL("build/benchmarks/", root), { recursive: true });
 const output = new URL(
-  `build/benchmarks/${profile ? "profile" : "optimized"}.json`,
+  process.env.BENCH_OUTPUT ??
+    `build/benchmarks/${profile ? "profile" : "optimized"}.json`,
   root,
 );
 await writeFile(output, JSON.stringify(report, null, 2) + "\n");

@@ -26,24 +26,25 @@ await writeFile(
 await writeFile(
   resolve(target, "check.ts"),
   `import assert from 'node:assert/strict';
-import { parseAidl } from 'aidl-parser';
+import { parseAidl, sourceText } from 'aidl-parser';
 import * as api from 'aidl-parser';
-import type { AidlParseResult, NodeBase, Annotation, Diagnostic, SourceLocation, Parameter } from 'aidl-parser';
-// @ts-expect-error The result type was renamed to AidlParseResult.
-import type { ParseResult } from 'aidl-parser';
-
+import type { AidlParseResult, NodeBase, Annotation, Diagnostic, SourceRange, Parameter } from 'aidl-parser';
 const result: AidlParseResult = parseAidl('interface IPacked { void ping(); }');
 assert.equal(result.document?.declarations[0]?.name, 'IPacked');
+assert.equal(sourceText('interface IPacked { void ping(); }', result.document!.declarations[0]!), 'interface IPacked { void ping(); }');
+assert.equal(result.document!.declarations[0]!.nameRange.start.offset, 10);
 assert.deepEqual(result.diagnostics, []);
-assert.deepEqual(Object.keys(api).sort(), ['parseAidl', 'upstream']);
+assert.deepEqual(Object.keys(api).sort(), ['parseAidl', 'sourceText', 'upstream']);
 if (false) {
   const unspecifiedDirection: Parameter['direction'] = null;
   // @ts-expect-error Unspecified direction is null, not an empty string.
   const emptyDirection: Parameter['direction'] = '';
-  const nodeLocation: SourceLocation = ({} as NodeBase).location;
-  const annotationLocation: SourceLocation = ({} as Annotation).location;
+  const nodeLocation: SourceRange = ({} as NodeBase).range;
+  const annotationLocation: SourceRange = ({} as Annotation).range;
+  // @ts-expect-error Diagnostic anchors are no longer exposed as AST locations.
+  const oldLocation = ({} as NodeBase).location;
   // @ts-expect-error Diagnostics may lack a source location.
-  const diagnosticLocation: SourceLocation = ({} as Diagnostic).location;
+  const diagnosticLocation: SourceRange = ({} as Diagnostic).range;
   // @ts-expect-error Only source text is accepted by the public API.
   parseAidl('', { filename: 'custom.aidl' });
 }

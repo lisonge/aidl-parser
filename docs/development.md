@@ -29,7 +29,29 @@ pnpm build            # npm package + production website
 pnpm typecheck
 pnpm test             # API tests + 52 pinned upstream fixtures
 pnpm test:package     # Pack, extract, import and typecheck actual npm contents
+pnpm test:browser     # Test unpacked package in Vite dev/production and module Workers
 pnpm benchmark        # Warm parse latency, wire bytes, JS stages, process memory/GC
 ```
 
 Build before typechecking/tests on a fresh checkout. Outputs live in each package's `build/` / `dist/`. Package tests write only to root `build/package-test/`.
+
+Browser integration tests use a separate headless profile under `build/package-test/`.
+Set `BROWSER_EXECUTABLE` to a Chromium browser path; Windows defaults to Microsoft
+Edge. Run `test:package` first. Tests cover main-thread loading, immediate and
+concurrent Worker requests, and rejected WASM loading without hanging requests.
+
+## Native CPU sampling
+
+```powershell
+mise exec -- node aidl-cpp/scripts/build.ts --profile
+node scripts/profile-native.ts
+```
+
+The separate profiling artifact retains WASM function names. The script warms
+the native entry point, then uses Node's CPU profiler at a requested 100 µs
+sampling interval. It excludes JS wire decoding and writes a DevTools-compatible
+`.cpuprofile` plus a JSON summary under `build/benchmarks/`. The runtime/OS may
+sample less frequently than requested. Inclusive sample counts overlap and are
+not additive; use non-instrumented paired benchmarks for performance claims.
+`PROFILE_CASE` selects `methods5000` (default), `chains20x500`, or `official`;
+`PROFILE_ITERATIONS` defaults to 200 and `PROFILE_OUTPUT` selects the output path.

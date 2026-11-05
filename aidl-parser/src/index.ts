@@ -35,3 +35,11 @@ export function parseAidl(source: string): AidlParseResult {
     module._free(input);
   }
 }
+
+/** Slice the exact input used to produce this AST. */
+export function sourceText(
+  source: string,
+  node: Pick<import("./types.ts").NodeBase, "range">,
+): string {
+  return source.slice(node.range.start.offset, node.range.end.offset);
+}

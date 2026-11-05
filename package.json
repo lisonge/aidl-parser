@@ -13,7 +13,8 @@
     "typecheck": "tsc --noEmit",
     "test": "node --test aidl-parser/test/*.test.ts",
     "test:package": "node scripts/test-package.ts",
-    "benchmark": "node scripts/benchmark.ts"
+    "benchmark": "node scripts/benchmark.ts",
+    "test:browser": "node scripts/test-browser.mjs"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm exec lint-staged"

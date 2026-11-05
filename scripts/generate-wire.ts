@@ -5,7 +5,7 @@ import { format, resolveConfig } from "prettier";
 
 // Explicit IDs belong to the private protocol, independently of AOSP enums.
 export const protocol = {
-  version: 1,
+  version: 2,
   kinds: {
     document: 1,
     interface: 2,
@@ -25,17 +25,22 @@ export const protocol = {
     array: 16,
     dynamic: 17,
     fixed: 18,
+    parenthesized: 19,
+    package: 20,
+    import: 21,
   },
   directions: { unspecified: 0, in: 1, out: 2, inout: 3 },
   severities: { error: 0, warning: 1 },
   keys: {
     kind: "k",
-    location: "p",
+    range: "p",
+    nameRange: "np",
+    expression: "ex",
     comments: "c",
     name: "n",
     annotations: "a",
     parameters: "ps",
-    literal: "l",
+    token: "l",
     operator: "o",
     left: "x",
     right: "y",
@@ -60,7 +65,7 @@ export const protocol = {
     enumerators: "es",
     imports: "im",
     declarations: "dc",
-    package: "pk",
+    packageDeclaration: "pk",
     document: "doc",
     diagnostics: "dg",
     severity: "s",

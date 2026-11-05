@@ -1,7 +1,9 @@
-# What's Changed
+# What's Changed in 0.2.0
 
-- Initial release of the Android 17 AIDL structural parser, powered by the official AOSP grammar and WebAssembly.
-- Support Node.js and browsers with an ESM API and synchronous parsing after initialization.
-- Return typed declarations, members, annotations, expressions, source locations and syntax diagnostics.
-- Include WASM assets, upstream metadata and third-party license notices in the npm package.
-- Support Vite production builds and development dependency optimization.
+- Expose full UTF-16 source ranges and declaration name ranges, with `sourceText` for exact source recovery.
+- Preserve explicit parentheses, literal token spelling, and package/import declaration nodes without synthesizing implicit defaults.
+- Replace the previous AST `location` and expression `literal` fields with the source-oriented AST contract.
+- Reduce native traversal, expression text reconstruction, JSON serialization, and source position decoding overhead.
+- Use native WebAssembly exception handling; runtimes must support Wasm EH.
+- Verify parsing and android-api-diff adapter output across 508 Android tags: 846,347 indexed AIDL records and 6,981 distinct source contents, with no failures or differences from the pre-optimization baseline.
+- Test packaged Node.js usage and Vite development/production browser and Worker initialization, including WASM load failures.

@@ -1,6 +1,8 @@
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { cpp, build } from "./paths.ts";
+import { sourceSpans } from "./source-spans.ts";
+import { syntaxPerformance } from "./syntax-performance.ts";
 
 // Patch a build-local copy; the pinned upstream checkout stays pristine.
 export async function prepare() {
@@ -58,6 +60,8 @@ void Parser::SetTypeParameters`,
     "  bool Repeatable()",
     "  const auto& Parameters() const { return parameters_; }\n  bool Repeatable()",
   );
+  sourceSpans(sources);
+  syntaxPerformance(sources);
   for (const [file, text] of sources) {
     const path = resolve(out, file);
     const old = await readFile(path, "utf8").catch(() => null);

@@ -1,6 +1,6 @@
 {
   "name": "aidl-parser",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "description": "AOSP Android 17 AIDL structural parser for Node.js and browsers, powered by WebAssembly",
   "license": "Apache-2.0",

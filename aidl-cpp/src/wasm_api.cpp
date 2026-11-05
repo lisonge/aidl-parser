@@ -8,17 +8,24 @@
 #include <stdexcept>
 
 Json location_json(const AidlLocation& location) {
-  if (!location.LocationKnown() || location.IsInternal()) return nullptr;
-  return Json::array({location.Begin().line, location.Begin().column, location.End().line, location.End().column});
+  if (!location.LocationKnown() || location.IsInternal() || location.Begin().offset < 0 || location.End().offset < 0) return nullptr;
+  return Json::array({location.Begin().offset, location.End().offset});
 }
-void location(Writer& out, const AidlLocation& p) {
-  if (!p.LocationKnown() || p.IsInternal()) throw std::logic_error("Missing source location for AIDL AST node");
-  out.key("p"); out.array();
-  out.value(p.Begin().line); out.value(p.Begin().column); out.value(p.End().line); out.value(p.End().column);
+void location(Writer& out, AidlSourceRange p, const char* key = "p") {
+  if (p.start < 0) throw std::logic_error("Missing source location for AIDL AST node");
+  out.key(key); out.array();
+  out.value(p.start); out.value(p.end);
+  out.end();
+}
+void comments(Writer& out, const Comments& values) {
+  if (values.empty()) return;
+  out.key("c"); out.array();
+  for (const auto& comment : values) out.value(comment.body);
   out.end();
 }
 void base(Writer& out, const AidlNode& node, int kind) {
-  out.object(); out.key("k"); out.value(kind); location(out, node.GetLocation());
+  out.object(); out.key("k"); out.value(kind); location(out, node.source_range);
+  if (node.name_range.start >= 0) location(out, node.name_range, "np");
   if (!node.GetComments().empty()) {
     out.key("c"); out.array();
     for (const auto& comment : node.GetComments()) out.value(comment.body);
@@ -31,7 +38,7 @@ void annotations(Writer& out, const AidlAnnotatable& node) {
   out.key("a"); out.array();
   for (const auto& annotation : node.GetAnnotations()) {
     out.object(); out.field("n", annotation->GetName());
-    location(out, annotation->GetLocation());
+    location(out, annotation->source_range); comments(out, annotation->GetComments());
     out.key("ps"); out.object();
     for (const auto& [key, value] : annotation->Parameters()) { out.key(key); expression(out, *value); }
     out.end(); out.end();
@@ -39,13 +46,14 @@ void annotations(Writer& out, const AidlAnnotatable& node) {
   out.end();
 }
 void expression(Writer& out, const AidlConstantValue& value) {
+  auto paren = dynamic_cast<const AidlParenthesizedExpression*>(&value);
   auto binary = dynamic_cast<const AidlBinaryConstExpression*>(&value);
   auto unary = dynamic_cast<const AidlUnaryConstExpression*>(&value);
   auto reference = dynamic_cast<const AidlConstantReference*>(&value);
   bool array = value.GetType() == AidlConstantValue::Type::ARRAY;
-  base(out, value, binary ? wire::k_binary : unary ? wire::k_unary : reference ? wire::k_reference : array ? wire::k_array : wire::k_literal);
-  out.field("l", value.Literal());
-  if (binary) {
+  base(out, value, paren ? wire::k_parenthesized : binary ? wire::k_binary : unary ? wire::k_unary : reference ? wire::k_reference : array ? wire::k_array : wire::k_literal);
+  if (paren) { out.key("ex"); expression(out, *paren->expression); }
+  else if (binary) {
     out.field("o", binary->Op()); out.key("x"); expression(out, *binary->Left()); out.key("y"); expression(out, *binary->Right());
   } else if (unary) {
     out.field("o", unary->Op()); out.key("u"); expression(out, *unary->Val());
@@ -55,6 +63,7 @@ void expression(Writer& out, const AidlConstantValue& value) {
     for (size_t i = 0; i < value.Size(); i++) expression(out, value.ValueAt(i));
     out.end();
   }
+  else if (!array) out.field("l", value.Literal());
   out.end();
 }
 void type_json(Writer& out, const AidlTypeSpecifier& type) {
@@ -107,7 +116,7 @@ void member(Writer& out, const AidlMember& value) {
 void declaration(Writer& out, const AidlDefinedType& type) {
   const auto kind = type.GetPreprocessDeclarationName();
   base(out, type, kind == "interface" ? wire::k_interface : kind == "union" ? wire::k_union : kind == "enum" ? wire::k_enum : wire::k_parcelable);
-  out.field("n", type.GetName()); annotations(out, type);
+  out.field("n", type.source_name); annotations(out, type);
   if (!type.GetMembers().empty()) {
     out.key("m"); out.array();
     for (const auto* item : type.GetMembers()) member(out, *item);
@@ -140,16 +149,22 @@ extern "C" char* aidl_parse(const char* source, const char* filename) {
   out.object(); out.key("version"); out.value(wire::version);
   try {
     PROFILE_BEGIN;
-    auto document = Parser::ParseSource(filename, source);
+    std::vector<SourceDeclaration> declarations;
+    auto document = Parser::ParseSource(filename, source, declarations);
     PROFILE_END(0);
     if (document && !AidlErrorLog::hadError()) {
-      out.key("doc"); base(out, *document, wire::k_document);
-      if (!document->Imports().empty()) {
-        out.key("im"); out.array();
-        for (const auto& import : document->Imports()) out.value(import);
-        out.end();
+      out.key("doc"); out.object(); out.key("k"); out.value(wire::k_document);
+      out.key("p"); out.array(); out.value(0); out.value(static_cast<int>(std::strlen(source))); out.end(); comments(out, document->GetComments());
+      for (const auto& item : declarations) if (item.is_package) {
+        out.key("pk"); out.object(); out.key("k"); out.value(wire::k_package); out.field("n", item.name);
+        location(out, item.range); location(out, item.name_range, "np"); comments(out, item.comments); out.end();
       }
-      if (!document->DefinedTypes().empty()) out.field("pk", document->DefinedTypes().front()->GetPackage());
+      out.key("im"); out.array();
+      for (const auto& item : declarations) if (!item.is_package) {
+        out.object(); out.key("k"); out.value(wire::k_import); out.field("n", item.name);
+        location(out, item.range); location(out, item.name_range, "np"); comments(out, item.comments); out.end();
+      }
+      out.end();
       out.key("dc"); out.array();
       for (const auto& type : document->DefinedTypes()) declaration(out, *type);
       out.end(); out.end();

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import upstream from "../../aidl-cpp/upstream/metadata.json";
-import type { AidlParseResult, SourceLocation } from "aidl-parser";
+import type { AidlParseResult, SourceRange } from "aidl-parser";
 import type { Request, Response } from "./protocol.ts";
 import { LatestRequest } from "./latest-request.ts";
 import { Editor } from "./editor.tsx";
@@ -14,7 +14,7 @@ function Tree({
 }: {
   value: unknown;
   label?: string;
-  onSelect: (location: SourceLocation) => void;
+  onSelect: (location: SourceRange) => void;
   depth?: number;
 }) {
   const [open, setOpen] = useState(depth < 3);
@@ -28,7 +28,7 @@ function Tree({
   const node = value as Record<string, unknown>;
   const entries = Object.entries(node).filter(
     ([key]) =>
-      key !== "location" &&
+      key !== "range" &&
       key !== "comments" &&
       !(Array.isArray(node[key]) && node[key].length === 0),
   );
@@ -45,12 +45,12 @@ function Tree({
             : String(node.kind ?? label)}
         </span>
         {typeof node.name === "string" && <strong>{node.name}</strong>}
-        {!!node.location && (
+        {!!node.range && (
           <button
             title="Jump to source"
             onClick={(event) => {
               event.preventDefault();
-              onSelect(node.location as SourceLocation);
+              onSelect(node.range as SourceRange);
             }}
           >
             ↗
@@ -136,7 +136,7 @@ export default function App() {
     );
     return () => clearTimeout(timer);
   }, [source]);
-  const jump = (location: SourceLocation) =>
+  const jump = (location: SourceRange) =>
     setSelection({
       start: location.start.offset,
       end: location.end.offset,
@@ -295,12 +295,12 @@ export default function App() {
           <button
             key={index}
             className="diagnostic"
-            onClick={() => item.location && jump(item.location)}
+            onClick={() => item.range && jump(item.range)}
           >
             <span>Error</span>
             <code>
-              {item.location
-                ? `${item.location.start.line}:${item.location.start.column}`
+              {item.range
+                ? `${item.range.start.line}:${item.range.start.column}`
                 : "—"}
             </code>
             {item.message}
