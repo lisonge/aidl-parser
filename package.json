@@ -1,0 +1,38 @@
+{
+  "name": "aidl-parser-workspace",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare": "simple-git-hooks",
+    "format": "prettier --write \"**/*.{ts,tsx,json,css,html,yaml,yml,md}\" --ignore-path .gitignore --ignore-path .prettierignore",
+    "upstream:sync": "node aidl-cpp/scripts/sync-upstream.ts",
+    "build:wasm": "node aidl-cpp/scripts/build.ts",
+    "build:parser": "node aidl-parser/scripts/build.ts",
+    "build": "node scripts/build.ts",
+    "dev": "node scripts/dev.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test aidl-parser/test/*.test.ts",
+    "test:package": "node scripts/test-package.ts",
+    "benchmark": "node scripts/benchmark.ts"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm exec lint-staged"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,json,css,html,yaml,yml,md}": "prettier --write --ignore-path .gitignore --ignore-path .prettierignore"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "chokidar": "catalog:",
+    "es-module-lexer": "^3.0.4",
+    "lint-staged": "^17.6.0",
+    "prettier": "^3.9.10",
+    "simple-git-hooks": "^2.14.0",
+    "tsdown": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:"
+  }
+}

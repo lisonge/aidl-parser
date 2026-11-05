@@ -1,0 +1,45 @@
+{
+  "name": "aidl-parser",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "AOSP Android 17 AIDL structural parser for Node.js and browsers, powered by WebAssembly",
+  "license": "Apache-2.0",
+  "author": "lisonge",
+  "homepage": "https://github.com/lisonge/aidl-parser#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lisonge/aidl-parser.git",
+    "directory": "aidl-parser"
+  },
+  "bugs": {
+    "url": "https://github.com/lisonge/aidl-parser/issues"
+  },
+  "keywords": [
+    "aidl",
+    "android",
+    "aosp",
+    "parser",
+    "webassembly",
+    "wasm",
+    "typescript"
+  ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "node scripts/build.ts",
+    "test": "node --test test/*.test.ts"
+  }
+}

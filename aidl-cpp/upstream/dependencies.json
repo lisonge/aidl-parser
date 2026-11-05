@@ -1,0 +1,17 @@
+{
+  "libbase": {
+    "repository": "https://github.com/msft-mirror-aosp/platform.system.libbase.git",
+    "tag": "android-17.0.0_r1",
+    "commit": "fef4173e19d97cd4b4fc09a06bccbf800d0d3937"
+  },
+  "fmtlib": {
+    "repository": "https://github.com/msft-mirror-aosp/platform.external.fmtlib.git",
+    "tag": "android-17.0.0_r1",
+    "commit": "e3bef0ad2e9d4ea38ba3b4b2b59e0514f7025fed"
+  },
+  "json": {
+    "repository": "https://github.com/nlohmann/json.git",
+    "tag": "v3.12.0",
+    "commit": "55f93686c01528224f448c19128836e7df245f72"
+  }
+}

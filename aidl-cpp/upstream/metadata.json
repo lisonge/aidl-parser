@@ -1,0 +1,6 @@
+{
+  "repository": "https://github.com/msft-mirror-aosp/platform.system.tools.aidl.git",
+  "upstream": "https://android.googlesource.com/platform/system/tools/aidl",
+  "tag": "android-17.0.0_r1",
+  "commit": "9a94664f74536bf28010207fd1804b04c6435e2c"
+}

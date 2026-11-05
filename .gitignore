@@ -1,0 +1,9 @@
+node_modules/
+**/build/
+**/dist/
+*.tgz
+*.zip
+aidl-cpp/upstream/aidl/
+aidl-cpp/upstream/libbase/
+aidl-cpp/upstream/json/
+aidl-cpp/upstream/fmtlib/

@@ -1,0 +1,32 @@
+[settings]
+activate_aggressive = true
+
+[tool_alias]
+emsdk = "http:emsdk"
+
+[tools]
+node = "24.16.0"
+pnpm = "12.16.1"
+python = "3.13.3"
+cmake = "4.4.5"
+ninja = "1.13.2"
+"conda:bison" = { version = "3.8.2", os = ["linux"] }
+"conda:flex" = { version = "2.6.4", os = ["linux"] }
+
+[tools.emsdk]
+version = "6.0.13"
+url = "https://github.com/emscripten-core/emsdk/archive/refs/tags/{{ version }}.tar.gz"
+strip_components = 1
+depends = ["python"]
+postinstall = '''python -c "import os, pathlib, subprocess, sys; sdk = pathlib.Path(os.environ['MISE_TOOL_INSTALL_PATH']) / 'emsdk.py'; version = os.environ['MISE_TOOL_VERSION']; [subprocess.run([sys.executable, str(sdk), action, version], check=True) for action in ('install', 'activate')]"'''
+
+[env]
+EMSDK = { value = "{{ tools.emsdk.path }}", tools = true }
+EM_CONFIG = { value = "{{ tools.emsdk.path }}/.emscripten", tools = true }
+_.path = { path = ["{{ tools.emsdk.path }}/upstream/emscripten"], tools = true }
+
+# WinFlexBison 2.5.25 contains Bison 3.8.2 and Flex 2.6.4.
+[tools."http:winflexbison"]
+version = "2.5.25"
+os = ["windows"]
+url = "https://github.com/lexxmark/winflexbison/releases/download/v{{ version }}/win_flex_bison-{{ version }}.zip"

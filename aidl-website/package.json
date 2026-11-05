@@ -1,0 +1,18 @@
+{
+  "name": "aidl-website",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1"
+  },
+  "dependencies": {
+    "aidl-parser": "workspace:*",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "@codemirror/state": "catalog:",
+    "@codemirror/view": "catalog:",
+    "@codemirror/commands": "catalog:"
+  }
+}

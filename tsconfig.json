@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "types": ["node", "vite/client"],
+    "strict": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true,
+    "skipLibCheck": true,
+    "jsx": "react-jsx"
+  },
+  "include": [
+    "scripts/**/*.ts",
+    "aidl-cpp/scripts/**/*.ts",
+    "aidl-parser/src/**/*.ts",
+    "aidl-parser/scripts/**/*.ts",
+    "aidl-parser/test/**/*.ts",
+    "aidl-website/src/**/*.ts",
+    "aidl-website/src/**/*.tsx",
+    "aidl-website/vite.config.ts"
+  ]
+}

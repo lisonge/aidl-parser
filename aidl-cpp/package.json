@@ -1,0 +1,8 @@
+{
+  "name": "aidl-cpp",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.ts"
+  }
+}
